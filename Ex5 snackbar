@@ -1,0 +1,194 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: ConfirmationPage(),
+    );
+  }
+}
+
+class ConfirmationPage extends StatefulWidget {
+  const ConfirmationPage({super.key});
+
+  @override
+  State<ConfirmationPage> createState() => _ConfirmationPageState();
+}
+
+class _ConfirmationPageState extends State<ConfirmationPage> {
+
+  String itemText = "Sample Item";
+
+  // ================== SNACKBAR ==================
+  void showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  // ================== CONFIRMATION DIALOG ==================
+  Future<void> showConfirmationDialog(String actionName) async {
+    bool? result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text("Confirm Action"),
+          content: Text("Are you sure you want to $actionName?"),
+          actions: [
+
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text("Cancel"),
+            ),
+
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              child: const Text("Yes"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == true) {
+      showSnackBar("$actionName successful ✅", Colors.green);
+    } else {
+      showSnackBar("$actionName cancelled ❌", Colors.red);
+    }
+  }
+
+  // ================== EDIT DIALOG ==================
+  void showEditDialog() {
+    TextEditingController controller =
+        TextEditingController(text: itemText);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text("Edit Item"),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              labelText: "Enter new value",
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                showSnackBar("Edit cancelled ❌", Colors.red);
+              },
+              child: const Text("Cancel"),
+            ),
+
+            ElevatedButton(
+              onPressed: () {
+                if (controller.text.trim().isEmpty) {
+                  showSnackBar("Value cannot be empty!", Colors.orange);
+                  return;
+                }
+
+                setState(() {
+                  itemText = controller.text.trim();
+                });
+
+                Navigator.pop(dialogContext);
+                showSnackBar("Item updated successfully ✅", Colors.green);
+              },
+              child: const Text("Save"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ================== UI ==================
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Advanced Confirmation App"),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+
+              const Text(
+                "Current Item:",
+                style: TextStyle(fontSize: 48),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                itemText,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 30),
+
+              ElevatedButton.icon(
+                icon: const Icon(Icons.delete),
+                label: const Text("Delete Item"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                ),
+                onPressed: () =>
+                    showConfirmationDialog("delete this item"),
+              ),
+
+              const SizedBox(height: 15),
+
+              ElevatedButton.icon(
+                icon: const Icon(Icons.edit),
+                label: const Text("Edit Item"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 131, 183, 231),
+                ),
+                onPressed: showEditDialog,
+              ),
+
+              const SizedBox(height: 15),
+
+              ElevatedButton.icon(
+                icon: const Icon(Icons.send),
+                label: const Text("Submit Form"),
+                onPressed: () =>
+                    showConfirmationDialog("submit the form"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
